@@ -17,7 +17,7 @@ cuestimTable = [cuestimTable; table(cue,stim,ITI,category,correctresp)];
 cue = AlphabetNoAX(randi(24,64,1))';
 stim = AlphabetNoAX(randi(24,64,1))';
 ITI = ITIs(randi(3,64,1))';
-category = repmat('AY',64,1);
+category = repmat('YY',64,1);
 correctresp = repmat('x',64,1);
 cuestimTable = [cuestimTable; table(cue,stim,ITI,category,correctresp)];
 %cuestimTable = cuestimTable(randperm(height(cuestimTable)),:); 
@@ -25,5 +25,7 @@ cuestimTable = [cuestimTable; table(cue,stim,ITI,category,correctresp)];
 cuestimTable.response = repmat({''},height(cuestimTable),1);
 cuestimTable.RT = repmat(0.0,height(cuestimTable),1);
 cuestimTable.correct = repmat(0,height(cuestimTable),1);
+cuestimTable.cuecolor = randi(3,height(cuestimTable),1);
+cuestimTable.stimcolor = randi(3,height(cuestimTable),1);
 writetable(cuestimTable,'.\data\AXCPT.csv');
     
