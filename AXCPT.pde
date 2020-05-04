@@ -12,18 +12,16 @@ int ITI = 0;
 int initscreen = 1;
 SoundFile soundfile;
 
-int index, rowCount=0;
+int rowCount=0;
 IntList trialnums = new IntList();
-Table tmptable, table;
-int stimTime, respTime, stimframe;
+Table table;
+int stimTime, respTime;
 boolean FirstPicFlag=true, noMore = true, init = true, playflag=true;
-boolean showstimflag = true;
 TableRow row;
 char cue, stim, correctresp;
 int cuecolor, stimcolor;
 
 String instructionText = "Press space to begin.\nYou may have to click on this screen first.\nPress '/' when an 'X' is after an 'A', else press 'X'";
-int imagewidth, imageheight;
 
 void setup() {
   background(bgcolor);
@@ -33,7 +31,7 @@ void setup() {
   textSize(textsize);
   fill(0);
   soundfile = new SoundFile(this, "Count.wav");
-  tmptable = loadTable("AXCPT.csv", "header");
+  Table tmptable = loadTable("AXCPT.csv", "header");
   table = new Table();
   table.addColumn("cue");
   table.addColumn("stim");
@@ -50,18 +48,12 @@ void setup() {
   }
   trialnums.shuffle();
   for (int i = 0; i < tmptable.getRowCount(); i++) {
-    index = trialnums.get(i);
+    int index = trialnums.get(i);
     row = tmptable.getRow(index);
     table.addRow(row);
   }
   saveTable(table, "temp.csv");
-  row = table.getRow(0);
-  cue = (row.getString("cue")).charAt(0);
-  stim = (row.getString("stim")).charAt(0);
-  correctresp = (row.getString("correctresp")).charAt(0);
-  ITI = row.getInt("ITI");
-  cuecolor = row.getInt("cuecolor");
-  stimcolor = row.getInt("stimcolor");
+
   FirstPicFlag = true;
 
   timer = new DrawTimer(new ProcessingScreen(this), new SystemTimer());
@@ -210,11 +202,7 @@ public static class ShowStimulus implements DrawTimer.Callback {
         };
         parent.text(parent.stim, parent.width/2, parent.height/2);
         parent.fill(0, 0, 0);
-        if (parent.showstimflag) {
-          parent.stimframe = parent.frameCount;
-          parent.stimTime = parent.millis();
-          parent.showstimflag = false;
-        }
+        parent.stimTime = parent.millis();
         timer.invokeAfter(DrawTimer.Time.fromMilliseconds(200), new ShowIntertrialInterval(timer, parent));
     }
 
@@ -246,7 +234,6 @@ public static class Anew implements DrawTimer.Callback {
 
     @Override
     public void f() {
-      parent.showstimflag=true;
       parent.rowCount += 1;
       parent.FirstPicFlag = true;
       parent.noMore = true;
