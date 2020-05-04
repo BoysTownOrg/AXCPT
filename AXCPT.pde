@@ -1,4 +1,5 @@
 import boystown.processing.util.*;
+import processing.sound.*;
 
 private DrawTimer timer;
 
@@ -15,7 +16,6 @@ int stimdur = 12*timemult;
 int ITI = 0;
 boolean jumpahead = false;
 int initscreen = 1;
-import processing.sound.*;
 SoundFile soundfile;
 
 int index, rowCount=0;
@@ -23,12 +23,11 @@ IntList trialnums = new IntList();
 Table tmptable, table;
 int saveTime = frameCount+1000000;
 int stimTime, respTime, stimframe;
-boolean stimflag=true, FirstPicFlag=true, noMore = true, init = true, playflag=true;
-boolean showcue=false, showfix1=false, showstim=false, showfix2=false, showstimflag=true, showITI=false;
+boolean FirstPicFlag=true, noMore = true, init = true, playflag=true;
+boolean showstimflag = true;
 TableRow row;
 char cue, stim, correctresp;
 int cuecolor, stimcolor;
-
 
 String instructionText = "Press space to begin.\nYou may have to click on this screen first.\nPress '/' when an 'X' is after an 'A', else press 'X'";
 int imagewidth, imageheight;
@@ -72,11 +71,6 @@ void setup() {
   stimcolor = row.getInt("stimcolor");
   //println(ITI);
   FirstPicFlag = true;
-  showfix1=false; 
-  showcue=false;
-  showfix2=false;
-  showstim=false;
-  showITI = false;
 
   timer = new DrawTimer(new ProcessingScreen(this), new SystemTimer());
 }
@@ -84,47 +78,14 @@ void setup() {
 void draw() {
   if (saveTime+fix1dur+cuedur+fix2dur+stimdur+ITI<frameCount) { //when eveything starts anew
     //println("1");
-    showfix1=false; 
-    showcue=false;
-    showfix2=false;
-    showstim=false;
-    showITI = false;
-    saveTime = frameCount;
     showstimflag=true;
+    saveTime = frameCount;
     rowCount += 1;
     FirstPicFlag = true;
     noMore = true;
     if (rowCount >= table.getRowCount()-1) {
       exit();
     }
-  } else if (saveTime+fix1dur+cuedur+fix2dur+stimdur<frameCount) {
-    //println("2");
-    showfix1=false; 
-    showcue=false;
-    showfix2=false;
-    showstim=false;
-    showITI = true;
-  } else if (saveTime+fix1dur+cuedur+fix2dur<frameCount) {
-    //println("3");
-    showfix1=false; 
-    showcue=false;
-    showfix2=false;
-    showstim=true;
-    showITI = false;
-  } else if (saveTime+fix1dur+cuedur<frameCount) {
-    //println("4");
-    showfix1=false; 
-    showcue=false;
-    showfix2=true;
-    showstim=false;
-    showITI = false;
-  } else if (saveTime+fix1dur<frameCount) {
-    //println("5");
-    showfix1=false; 
-    showcue=true;
-    showfix2=false;
-    showstim=false;
-    showITI = false;
   } else if (saveTime<frameCount) {
     if (FirstPicFlag) {
       //println("6");
@@ -139,25 +100,9 @@ void draw() {
       FirstPicFlag = false;
 
       timer.invokeAfter(DrawTimer.Time.fromMilliseconds(0), new ShowFirstFixation(timer, this));
-      showfix1=true; 
-      showcue=false;
-      showfix2=false;
-      showstim=false;
-      showITI = false;
     }
   }
 
-  if (showfix1) {
-  } else if (showcue) {
-  } else if (showfix2) {
-  } else if (showstim) {
-    if (showstimflag) {
-      stimframe = frameCount;
-      stimTime = millis();
-      showstimflag = false;
-    }
-  } else if (showITI) {
-  }
   if (init) {
     if (initscreen == 1) {
       text(instructionText, width/2, height/2);
@@ -182,10 +127,18 @@ void keyPressed() {
   if (key == ' ') {
     if (initscreen>1) {
       init = false;
-      showcue = true;
-      //println("0");
       background(bgcolor);
       delay(500);
+      if (cuecolor == 1) {
+        fill(0, 0, 255);
+      } else if (cuecolor == 2) {
+        fill(0, 255, 0);
+      } else if (cuecolor == 3) {
+        fill(255, 0, 0);
+      };
+      text(cue, width/2, height/2);
+      fill(0, 0, 0);
+      //println("0");
       saveTime = frameCount; //+saveTime+fix1dur+cuedur+fix2dur+stimdur+ITI;
     } else {
       initscreen += 1;
@@ -228,6 +181,7 @@ public static class ShowFirstFixation implements DrawTimer.Callback {
         this.parent = parent;
     }
 
+    @Override
     public void f() {
         parent.background(parent.bgcolor);
         parent.text("+", parent.width/2, parent.height/2);
@@ -244,6 +198,7 @@ public static class ShowCue implements DrawTimer.Callback {
         this.parent = parent;
     }
 
+    @Override
     public void f() {
         parent.background(parent.bgcolor);
         if (parent.cuecolor == 1) {
@@ -268,6 +223,7 @@ public static class ShowSecondFixation implements DrawTimer.Callback {
         this.parent = parent;
     }
 
+    @Override
     public void f() {
         parent.background(parent.bgcolor);
         parent.text("+", parent.width/2, parent.height/2);
@@ -284,6 +240,7 @@ public static class ShowStimulus implements DrawTimer.Callback {
         this.parent = parent;
     }
 
+    @Override
     public void f() {
         parent.background(parent.bgcolor);
         if (parent.stimcolor == 1) {
@@ -312,6 +269,7 @@ public static class ShowIntertrialInterval implements DrawTimer.Callback {
         this.parent = parent;
     }
 
+    @Override
     public void f() {
         parent.background(parent.bgcolor);
     }
