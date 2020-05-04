@@ -8,20 +8,13 @@ int textsize = 64;
 char AXkey = '/';  
 char otherkey = 'x';
 char upotherkey = 'X';
-int timemult = 1;
-int fix1dur = 60*timemult;
-int cuedur = 12*timemult; //in frame counts; in msec = 180;
-int fix2dur = 60*timemult; //two fix : before and after stim
-int stimdur = 12*timemult;
 int ITI = 0;
-boolean jumpahead = false;
 int initscreen = 1;
 SoundFile soundfile;
 
 int index, rowCount=0;
 IntList trialnums = new IntList();
 Table tmptable, table;
-int saveTime = frameCount+1000000;
 int stimTime, respTime, stimframe;
 boolean FirstPicFlag=true, noMore = true, init = true, playflag=true;
 boolean showstimflag = true;
@@ -66,47 +59,18 @@ void setup() {
   cue = (row.getString("cue")).charAt(0);
   stim = (row.getString("stim")).charAt(0);
   correctresp = (row.getString("correctresp")).charAt(0);
-  ITI = round(int(row.getInt("ITI"))*0.06)*timemult;
+  ITI = row.getInt("ITI");
   cuecolor = row.getInt("cuecolor");
   stimcolor = row.getInt("stimcolor");
-  //println(ITI);
   FirstPicFlag = true;
 
   timer = new DrawTimer(new ProcessingScreen(this), new SystemTimer());
 }
 
 void draw() {
-  if (saveTime+fix1dur+cuedur+fix2dur+stimdur+ITI<frameCount) { //when eveything starts anew
-    //println("1");
-    showstimflag=true;
-    saveTime = frameCount;
-    rowCount += 1;
-    FirstPicFlag = true;
-    noMore = true;
-    if (rowCount >= table.getRowCount()-1) {
-      exit();
-    }
-  } else if (saveTime<frameCount) {
-    if (FirstPicFlag) {
-      //println("6");
-      row = table.getRow(rowCount);
-      cue = (row.getString("cue")).charAt(0);
-      stim = (row.getString("stim")).charAt(0);
-      correctresp = (row.getString("correctresp")).charAt(0);
-      ITI = round(int(row.getInt("ITI"))*0.06);
-      cuecolor = row.getInt("cuecolor");
-      stimcolor = row.getInt("stimcolor");
-      //println(ITI);
-      FirstPicFlag = false;
-
-      timer.invokeAfter(DrawTimer.Time.fromMilliseconds(0), new ShowFirstFixation(timer, this));
-    }
-  }
-
   if (init) {
     if (initscreen == 1) {
       text(instructionText, width/2, height/2);
-      //println("-1");
     } else {
       if (playflag) {
         background(bgcolor);
@@ -118,43 +82,47 @@ void draw() {
       }
     }
   }
+  else if (FirstPicFlag) {
+    row = table.getRow(rowCount);
+    cue = (row.getString("cue")).charAt(0);
+    stim = (row.getString("stim")).charAt(0);
+    correctresp = (row.getString("correctresp")).charAt(0);
+    ITI = row.getInt("ITI");
+    cuecolor = row.getInt("cuecolor");
+    stimcolor = row.getInt("stimcolor");
+    FirstPicFlag = false;
+
+    timer.invokeAfter(DrawTimer.Time.fromMilliseconds(0), new ShowFirstFixation(timer, this));
+  }
 }
 
-
-
 void keyPressed() {
-
   if (key == ' ') {
     if (initscreen>1) {
       init = false;
       background(bgcolor);
       delay(500);
-      saveTime = frameCount; //+saveTime+fix1dur+cuedur+fix2dur+stimdur+ITI;
     } else {
       initscreen += 1;
     }
   }
   if (key == AXkey && noMore) {
-    //println("left");
     noMore = false;
     respTime = millis();
     table.setString(rowCount, "response", str(AXkey));
     table.setInt(rowCount, "correct", int(AXkey == correctresp));
-    //println(Integer.parseInt(str(leftkey)),left);
     table.setFloat(rowCount, "RT", respTime-stimTime);
   }
   if ((key == otherkey || key == upotherkey) && noMore) {
-    //println("right");
     noMore = false;
     respTime = millis();
     table.setString(rowCount, "response", str(otherkey));
     table.setInt(rowCount, "correct", int(otherkey == correctresp));
-    //println(Integer.parseInt(str(rightkey)),left);
     table.setFloat(rowCount, "RT", respTime-stimTime);
   }
 }
+
 void exit() {
-  //it's over, baby
   String dayS = String.valueOf(day());
   String hourS = String.valueOf(hour());
   String minuteS = String.valueOf(minute());
@@ -247,7 +215,7 @@ public static class ShowStimulus implements DrawTimer.Callback {
           parent.stimTime = parent.millis();
           parent.showstimflag = false;
         }
-        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(200), new ShowIntertrialInterval(parent));
+        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(200), new ShowIntertrialInterval(timer, parent));
     }
 
     private AXCPT parent;
@@ -255,13 +223,36 @@ public static class ShowStimulus implements DrawTimer.Callback {
 }
 
 public static class ShowIntertrialInterval implements DrawTimer.Callback {
-    ShowIntertrialInterval(AXCPT parent) {
+    ShowIntertrialInterval(DrawTimer timer, AXCPT parent) {
+        this.timer = timer;
         this.parent = parent;
     }
 
     @Override
     public void f() {
         parent.background(parent.bgcolor);
+        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(parent.ITI), new Anew(parent));
+    }
+
+    private AXCPT parent;
+    private DrawTimer timer;
+}
+
+
+public static class Anew implements DrawTimer.Callback {
+    Anew(AXCPT parent) {
+        this.parent = parent;
+    }
+
+    @Override
+    public void f() {
+      parent.showstimflag=true;
+      parent.rowCount += 1;
+      parent.FirstPicFlag = true;
+      parent.noMore = true;
+      if (parent.rowCount >= parent.table.getRowCount()-1) {
+        parent.exit();
+      }
     }
 
     private AXCPT parent;
