@@ -129,16 +129,6 @@ void keyPressed() {
       init = false;
       background(bgcolor);
       delay(500);
-      if (cuecolor == 1) {
-        fill(0, 0, 255);
-      } else if (cuecolor == 2) {
-        fill(0, 255, 0);
-      } else if (cuecolor == 3) {
-        fill(255, 0, 0);
-      };
-      text(cue, width/2, height/2);
-      fill(0, 0, 0);
-      //println("0");
       saveTime = frameCount; //+saveTime+fix1dur+cuedur+fix2dur+stimdur+ITI;
     } else {
       initscreen += 1;
