@@ -1,3 +1,8 @@
+import boystown.processing.util.*;
+
+private DrawTimer timer;
+
+int bgcolor = 255; //black = 0, 128 gray, 255 white; 
 int textsize = 64;
 char AXkey = '/';  
 char otherkey = 'x';
@@ -14,7 +19,6 @@ import processing.sound.*;
 SoundFile soundfile;
 
 int index, rowCount=0;
-int bgcolor = 255; //black = 0, 128 gray, 255 white; 
 IntList trialnums = new IntList();
 Table tmptable, table;
 int saveTime = frameCount+1000000;
@@ -73,6 +77,8 @@ void setup() {
   showfix2=false;
   showstim=false;
   showITI = false;
+
+  timer = new DrawTimer(new ProcessingScreen(this), new SystemTimer());
 }
 
 void draw() {
@@ -132,6 +138,7 @@ void draw() {
       //println(ITI);
       FirstPicFlag = false;
 
+      timer.invokeAfter(DrawTimer.Time.fromMilliseconds(0), new ShowFirstFixation(timer, this));
       showfix1=true; 
       showcue=false;
       showfix2=false;
@@ -141,46 +148,15 @@ void draw() {
   }
 
   if (showfix1) {
-    background(bgcolor);
-    text("+", width/2, height/2);
-    //text("1", width/2, height/2);
   } else if (showcue) {
-    background(bgcolor);
-    if (cuecolor == 1) {
-      fill(0, 0, 255);
-    } else if (cuecolor == 2) {
-      fill(0, 255, 0);
-    } else if (cuecolor == 3) {
-      fill(255, 0, 0);
-    };
-    text(cue, width/2, height/2);
-    fill(0, 0, 0);
-    //text("2", width/2, height/2);
   } else if (showfix2) {
-    background(bgcolor);
-    text("+", width/2, height/2);
-
-    //text("3", width/2, height/2);
   } else if (showstim) {
-    background(bgcolor);
-    if (stimcolor == 1) {
-      fill(0, 0, 255);
-    } else if (stimcolor == 2) {
-      fill(0, 255, 0);
-    } else if (stimcolor == 3) {
-      fill(255, 0, 0);
-    };
-    text(stim, width/2, height/2);
-    fill(0, 0, 0);
-    //text("4", width/2, height/2);
     if (showstimflag) {
       stimframe = frameCount;
       stimTime = millis();
       showstimflag = false;
     }
   } else if (showITI) {
-    background(bgcolor);
-    //text("5", width/2, height/2);
   }
   if (init) {
     if (initscreen == 1) {
@@ -244,4 +220,101 @@ void exit() {
 
   println("exiting");
   super.exit();
+}
+
+public static class ShowFirstFixation implements DrawTimer.Callback {
+    ShowFirstFixation(DrawTimer timer, AXCPT parent) {
+        this.timer = timer;
+        this.parent = parent;
+    }
+
+    public void f() {
+        parent.background(parent.bgcolor);
+        parent.text("+", parent.width/2, parent.height/2);
+        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(1000), new ShowCue(timer, parent));
+    }
+
+    private AXCPT parent;
+    private DrawTimer timer;
+}
+
+public static class ShowCue implements DrawTimer.Callback {
+    ShowCue(DrawTimer timer, AXCPT parent) {
+        this.timer = timer;
+        this.parent = parent;
+    }
+
+    public void f() {
+        parent.background(parent.bgcolor);
+        if (parent.cuecolor == 1) {
+          parent.fill(0, 0, 255);
+        } else if (parent.cuecolor == 2) {
+          parent.fill(0, 255, 0);
+        } else if (parent.cuecolor == 3) {
+          parent.fill(255, 0, 0);
+        };
+        parent.text(parent.cue, parent.width/2, parent.height/2);
+        parent.fill(0, 0, 0);
+        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(200), new ShowSecondFixation(timer, parent));
+    }
+
+    private AXCPT parent;
+    private DrawTimer timer;
+}
+
+public static class ShowSecondFixation implements DrawTimer.Callback {
+    ShowSecondFixation(DrawTimer timer, AXCPT parent) {
+        this.timer = timer;
+        this.parent = parent;
+    }
+
+    public void f() {
+        parent.background(parent.bgcolor);
+        parent.text("+", parent.width/2, parent.height/2);
+        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(1000), new ShowStimulus(timer, parent));
+    }
+
+    private AXCPT parent;
+    private DrawTimer timer;
+}
+
+public static class ShowStimulus implements DrawTimer.Callback {
+    ShowStimulus(DrawTimer timer, AXCPT parent) {
+        this.timer = timer;
+        this.parent = parent;
+    }
+
+    public void f() {
+        parent.background(parent.bgcolor);
+        if (parent.stimcolor == 1) {
+          parent.fill(0, 0, 255);
+        } else if (parent.stimcolor == 2) {
+          parent.fill(0, 255, 0);
+        } else if (parent.stimcolor == 3) {
+          parent.fill(255, 0, 0);
+        };
+        parent.text(parent.stim, parent.width/2, parent.height/2);
+        parent.fill(0, 0, 0);
+        if (parent.showstimflag) {
+          parent.stimframe = parent.frameCount;
+          parent.stimTime = parent.millis();
+          parent.showstimflag = false;
+        }
+        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(200), new ShowIntertrialInterval(parent));
+    }
+
+    private AXCPT parent;
+    private DrawTimer timer;
+}
+
+public static class ShowIntertrialInterval implements DrawTimer.Callback {
+    ShowIntertrialInterval(AXCPT parent) {
+        this.parent = parent;
+    }
+
+    public void f() {
+        parent.background(parent.bgcolor);
+    }
+
+    private AXCPT parent;
 }
