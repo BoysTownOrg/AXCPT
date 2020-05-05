@@ -84,7 +84,7 @@ void draw() {
     stimcolor = row.getInt("stimcolor");
     FirstPicFlag = false;
 
-    timer.invokeAfter(DrawTimer.Time.fromMilliseconds(0), new ShowFirstFixation(timer, this));
+    timer.invokeAfter(DrawTimer.Time.fromMilliseconds(0), new ShowFirstFixation());
   }
 }
 
@@ -125,122 +125,76 @@ void exit() {
   super.exit();
 }
 
-public static class ShowFirstFixation implements DrawTimer.Callback {
-    ShowFirstFixation(DrawTimer timer, AXCPT parent) {
-        this.timer = timer;
-        this.parent = parent;
-    }
-
+public class ShowFirstFixation implements DrawTimer.Callback {
     @Override
     public void f() {
-        parent.background(parent.bgcolor);
-        parent.text("+", parent.width/2, parent.height/2);
-        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(1000), new ShowCue(timer, parent));
+        background(bgcolor);
+        text("+", width/2, height/2);
+        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(1000), new ShowCue());
     }
-
-    private AXCPT parent;
-    private DrawTimer timer;
 }
 
-public static class ShowCue implements DrawTimer.Callback {
-    ShowCue(DrawTimer timer, AXCPT parent) {
-        this.timer = timer;
-        this.parent = parent;
-    }
-
+public class ShowCue implements DrawTimer.Callback {
     @Override
     public void f() {
-        parent.background(parent.bgcolor);
-        if (parent.cuecolor == 1) {
-          parent.fill(0, 0, 255);
-        } else if (parent.cuecolor == 2) {
-          parent.fill(0, 255, 0);
-        } else if (parent.cuecolor == 3) {
-          parent.fill(255, 0, 0);
+        background(bgcolor);
+        if (cuecolor == 1) {
+          fill(0, 0, 255);
+        } else if (cuecolor == 2) {
+          fill(0, 255, 0);
+        } else if (cuecolor == 3) {
+          fill(255, 0, 0);
         };
-        parent.text(parent.cue, parent.width/2, parent.height/2);
-        parent.fill(0, 0, 0);
-        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(200), new ShowSecondFixation(timer, parent));
+        text(cue, width/2, height/2);
+        fill(0, 0, 0);
+        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(200), new ShowSecondFixation());
     }
-
-    private AXCPT parent;
-    private DrawTimer timer;
 }
 
-public static class ShowSecondFixation implements DrawTimer.Callback {
-    ShowSecondFixation(DrawTimer timer, AXCPT parent) {
-        this.timer = timer;
-        this.parent = parent;
-    }
-
+public class ShowSecondFixation implements DrawTimer.Callback {
     @Override
     public void f() {
-        parent.background(parent.bgcolor);
-        parent.text("+", parent.width/2, parent.height/2);
-        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(1000), new ShowStimulus(timer, parent));
+        background(bgcolor);
+        text("+", width/2, height/2);
+        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(1000), new ShowStimulus());
     }
-
-    private AXCPT parent;
-    private DrawTimer timer;
 }
 
-public static class ShowStimulus implements DrawTimer.Callback {
-    ShowStimulus(DrawTimer timer, AXCPT parent) {
-        this.timer = timer;
-        this.parent = parent;
-    }
-
+public class ShowStimulus implements DrawTimer.Callback {
     @Override
     public void f() {
-        parent.background(parent.bgcolor);
-        if (parent.stimcolor == 1) {
-          parent.fill(0, 0, 255);
-        } else if (parent.stimcolor == 2) {
-          parent.fill(0, 255, 0);
-        } else if (parent.stimcolor == 3) {
-          parent.fill(255, 0, 0);
+        background(bgcolor);
+        if (stimcolor == 1) {
+          fill(0, 0, 255);
+        } else if (stimcolor == 2) {
+          fill(0, 255, 0);
+        } else if (stimcolor == 3) {
+          fill(255, 0, 0);
         };
-        parent.text(parent.stim, parent.width/2, parent.height/2);
-        parent.fill(0, 0, 0);
-        parent.stimTime = parent.millis();
-        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(200), new ShowIntertrialInterval(timer, parent));
+        text(stim, width/2, height/2);
+        fill(0, 0, 0);
+        stimTime = millis();
+        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(200), new ShowIntertrialInterval());
     }
-
-    private AXCPT parent;
-    private DrawTimer timer;
 }
 
-public static class ShowIntertrialInterval implements DrawTimer.Callback {
-    ShowIntertrialInterval(DrawTimer timer, AXCPT parent) {
-        this.timer = timer;
-        this.parent = parent;
-    }
-
+public class ShowIntertrialInterval implements DrawTimer.Callback {
     @Override
     public void f() {
-        parent.background(parent.bgcolor);
-        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(parent.ITI), new Anew(parent));
+        background(bgcolor);
+        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(ITI), new Anew());
     }
-
-    private AXCPT parent;
-    private DrawTimer timer;
 }
 
 
-public static class Anew implements DrawTimer.Callback {
-    Anew(AXCPT parent) {
-        this.parent = parent;
-    }
-
+public class Anew implements DrawTimer.Callback {
     @Override
     public void f() {
-      parent.rowCount += 1;
-      parent.FirstPicFlag = true;
-      parent.noMore = true;
-      if (parent.rowCount >= parent.table.getRowCount()-1) {
-        parent.exit();
+      rowCount += 1;
+      FirstPicFlag = true;
+      noMore = true;
+      if (rowCount >= table.getRowCount()-1) {
+        exit();
       }
     }
-
-    private AXCPT parent;
 }
