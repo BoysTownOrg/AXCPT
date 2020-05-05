@@ -2,6 +2,16 @@ import boystown.processing.util.*;
 import processing.sound.*;
 
 private DrawTimer timer;
+private static final DrawTimer.Time firstFixationDuration =
+  DrawTimer.Time.fromMilliseconds(1000);
+private static final DrawTimer.Time cueDuration =
+  DrawTimer.Time.fromMilliseconds(200);
+private static final DrawTimer.Time secondFixationDuration =
+  DrawTimer.Time.fromMilliseconds(1000);
+private static final DrawTimer.Time stimulusDuration =
+  DrawTimer.Time.fromMilliseconds(200);
+private final DrawTimer.Callback presentTrial =
+  new ShowFirstFixation_Cue_SecondFixation_Stimulus_IntertrialIntervalThenPrepareNext();
 
 int bgcolor = 255; //black = 0, 128 gray, 255 white; 
 int textsize = 64;
@@ -84,7 +94,7 @@ void draw() {
     stimcolor = row.getInt("stimcolor");
     FirstPicFlag = false;
 
-    timer.invokeAfter(DrawTimer.Time.fromMilliseconds(0), new ShowFirstFixation());
+    timer.invokeAfter(DrawTimer.Time.fromMilliseconds(0), presentTrial);
   }
 }
 
@@ -125,76 +135,93 @@ void exit() {
   super.exit();
 }
 
-public class ShowFirstFixation implements DrawTimer.Callback {
-    @Override
-    public void f() {
-        background(bgcolor);
-        text("+", width/2, height/2);
-        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(1000), new ShowCue());
-    }
+public class ShowFirstFixation_Cue_SecondFixation_Stimulus_IntertrialIntervalThenPrepareNext
+  implements DrawTimer.Callback {
+  private final DrawTimer.Callback next =
+    new ShowCue_SecondFixation_Stimulus_IntertrialIntervalThenPrepareNext();
+  
+  @Override
+  public void f() {
+    background(bgcolor);
+    text("+", width/2, height/2);
+    timer.invokeAfter(firstFixationDuration, next);
+  }
 }
 
-public class ShowCue implements DrawTimer.Callback {
-    @Override
-    public void f() {
-        background(bgcolor);
-        if (cuecolor == 1) {
-          fill(0, 0, 255);
-        } else if (cuecolor == 2) {
-          fill(0, 255, 0);
-        } else if (cuecolor == 3) {
-          fill(255, 0, 0);
-        };
-        text(cue, width/2, height/2);
-        fill(0, 0, 0);
-        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(200), new ShowSecondFixation());
-    }
+public class ShowCue_SecondFixation_Stimulus_IntertrialIntervalThenPrepareNext
+implements DrawTimer.Callback {
+  private final DrawTimer.Callback next =
+    new ShowSecondFixation_Stimulus_IntertrialIntervalThenPrepareNext();
+  
+  @Override
+  public void f() {
+    background(bgcolor);
+    if (cuecolor == 1) {
+      fill(0, 0, 255);
+    } else if (cuecolor == 2) {
+      fill(0, 255, 0);
+    } else if (cuecolor == 3) {
+      fill(255, 0, 0);
+    };
+    text(cue, width/2, height/2);
+    fill(0, 0, 0);
+    timer.invokeAfter(cueDuration, next);
+  }
 }
 
-public class ShowSecondFixation implements DrawTimer.Callback {
-    @Override
-    public void f() {
-        background(bgcolor);
-        text("+", width/2, height/2);
-        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(1000), new ShowStimulus());
-    }
+public class ShowSecondFixation_Stimulus_IntertrialIntervalThenPrepareNext
+  implements DrawTimer.Callback {
+  private final DrawTimer.Callback next =
+    new ShowStimulus_IntertrialIntervalThenPrepareNext();
+  
+  @Override
+  public void f() {
+    background(bgcolor);
+    text("+", width/2, height/2);
+    timer.invokeAfter(secondFixationDuration, next);
+  }
 }
 
-public class ShowStimulus implements DrawTimer.Callback {
-    @Override
-    public void f() {
-        background(bgcolor);
-        if (stimcolor == 1) {
-          fill(0, 0, 255);
-        } else if (stimcolor == 2) {
-          fill(0, 255, 0);
-        } else if (stimcolor == 3) {
-          fill(255, 0, 0);
-        };
-        text(stim, width/2, height/2);
-        fill(0, 0, 0);
-        stimTime = millis();
-        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(200), new ShowIntertrialInterval());
-    }
+public class ShowStimulus_IntertrialIntervalThenPrepareNext
+implements DrawTimer.Callback {
+  private final DrawTimer.Callback next =
+    new ShowIntertrialIntervalThenPrepareNext();
+  
+  @Override
+  public void f() {
+    background(bgcolor);
+    if (stimcolor == 1) {
+      fill(0, 0, 255);
+    } else if (stimcolor == 2) {
+      fill(0, 255, 0);
+    } else if (stimcolor == 3) {
+      fill(255, 0, 0);
+    };
+    text(stim, width/2, height/2);
+    fill(0, 0, 0);
+    stimTime = millis();
+    timer.invokeAfter(stimulusDuration, next);
+  }
 }
 
-public class ShowIntertrialInterval implements DrawTimer.Callback {
-    @Override
-    public void f() {
-        background(bgcolor);
-        timer.invokeAfter(DrawTimer.Time.fromMilliseconds(ITI), new Anew());
-    }
+public class ShowIntertrialIntervalThenPrepareNext implements DrawTimer.Callback {
+  private final DrawTimer.Callback next = new PrepareNextTrial();
+
+  @Override
+  public void f() {
+    background(bgcolor);
+    timer.invokeAfter(DrawTimer.Time.fromMilliseconds(ITI), next);
+  }
 }
 
-
-public class Anew implements DrawTimer.Callback {
-    @Override
-    public void f() {
-      rowCount += 1;
-      FirstPicFlag = true;
-      noMore = true;
-      if (rowCount >= table.getRowCount()-1) {
-        exit();
-      }
+public class PrepareNextTrial implements DrawTimer.Callback {
+  @Override
+  public void f() {
+    rowCount += 1;
+    FirstPicFlag = true;
+    noMore = true;
+    if (rowCount >= table.getRowCount()-1) {
+      exit();
     }
+  }
 }
