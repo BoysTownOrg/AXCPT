@@ -239,7 +239,7 @@ void exit() {
   String dayS = String.valueOf(day());
   String hourS = String.valueOf(hour());
   String minuteS = String.valueOf(minute());
-  String myfilename = "AS3out"+"-"+dayS+"-"+hourS+"-"+minuteS+".csv";
+  String myfilename = "AXCPTout"+"-"+dayS+"-"+hourS+"-"+minuteS+".csv";
   saveTable(table, myfilename, "csv");
 
   println("exiting");
