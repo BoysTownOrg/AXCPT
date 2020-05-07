@@ -1,0 +1,10 @@
+You have completed the practice trials and are now entering the experimental trials.
+
+As a reminder, if the letter presented is an 'X' which was preceded by an 'A', press the '/' key.
+
+Press the 'Z' key for all other letters, including 'A' and an 'X' that was NOT preceded by an 'A'.
+
+--
+If you have any questions, please consult the researcher.
+
+To begin, press the SPACEBAR.
