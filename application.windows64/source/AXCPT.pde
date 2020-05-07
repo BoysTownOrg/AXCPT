@@ -3,10 +3,10 @@ char AXkey = '/';
 char otherkey = 'x';
 char upotherkey = 'X';
 int timemult = 1;
-int fix1dur = 60*timemult;
-int cuedur = 12*timemult; //in frame counts; in msec = 180;
-int fix2dur = 60*timemult; //two fix : before and after stim
-int stimdur = 12*timemult;
+int fix1dur = 1000*timemult; //in  msec;
+int cuedur = 200*timemult; 
+int fix2dur = 1000*timemult; //two fix : before and after stim
+int stimdur = 200*timemult;
 int ITI = 0;
 boolean jumpahead = false;
 int initscreen = 1;
@@ -17,16 +17,17 @@ int index, rowCount=0;
 int bgcolor = 255; //black = 0, 128 gray, 255 white; 
 IntList trialnums = new IntList();
 Table tmptable, table;
-int saveTime = frameCount+1000000;
-int stimTime, respTime, stimframe;
-boolean stimflag=true, FirstPicFlag=true, noMore = true, init = true, playflag=true;
+int saveTime = millis()+1000000;
+int stimTime, respTime;
+boolean stimflag=true, FirstPicFlag=true, noMore = true, init = true, playflag=true, expStarted=false;
 boolean showcue=false, showfix1=false, showstim=false, showfix2=false, showstimflag=true, showITI=false;
 TableRow row;
 char cue, stim, correctresp;
-int cuecolor, stimcolor;
+int cuecolor, stimcolor, ispractice;
 
+String [] firstInstructions, pracInstructions, expInstructions;
 
-String instructionText = "Press space to begin.\nYou may have to click on this screen first.\nPress '/' when an 'X' is after an 'A', else press 'X'";
+String firstinstructionText, pracinstructionText, expinstructionText; 
 int imagewidth, imageheight;
 
 void setup() {
@@ -36,6 +37,12 @@ void setup() {
   fullScreen();
   textSize(textsize);
   fill(0);
+  firstInstructions = loadStrings("FirstInstructions.txt");
+  pracInstructions = loadStrings("PracInstructions.txt");
+  expInstructions = loadStrings("ExpInstructions.txt");
+  firstinstructionText = join(firstInstructions, "\n");
+  pracinstructionText = join(pracInstructions, "\n");
+  expinstructionText = join(expInstructions, "\n");
   soundfile = new SoundFile(this, "Count.wav");
   tmptable = loadTable("AXCPT.csv", "header");
   table = new Table();
@@ -49,6 +56,7 @@ void setup() {
   table.addColumn("correct");
   table.addColumn("cuecolor");
   table.addColumn("stimcolor");
+  table.addColumn("ispractice");
   for (int i = 0; i < tmptable.getRowCount(); i++) {
     trialnums.append(i);
   }
@@ -58,14 +66,16 @@ void setup() {
     row = tmptable.getRow(index);
     table.addRow(row);
   }
+  table.sortReverse("ispractice");
   saveTable(table, "temp.csv");
   row = table.getRow(0);
   cue = (row.getString("cue")).charAt(0);
   stim = (row.getString("stim")).charAt(0);
   correctresp = (row.getString("correctresp")).charAt(0);
-  ITI = round(int(row.getInt("ITI"))*0.06)*timemult;
+  ITI = round(int(row.getInt("ITI")))*timemult;
   cuecolor = row.getInt("cuecolor");
   stimcolor = row.getInt("stimcolor");
+  ispractice = row.getInt("ispractice");
   //println(ITI);
   FirstPicFlag = true;
   showfix1=false; 
@@ -76,14 +86,14 @@ void setup() {
 }
 
 void draw() {
-  if (saveTime+fix1dur+cuedur+fix2dur+stimdur+ITI<frameCount) { //when eveything starts anew
-    //println("1");
+  if (saveTime+fix1dur+cuedur+fix2dur+stimdur+ITI<millis()) { //when eveything starts anew
+    //println("inc rowcount",rowCount);
     showfix1=false; 
     showcue=false;
     showfix2=false;
     showstim=false;
     showITI = false;
-    saveTime = frameCount;
+    saveTime = millis();
     showstimflag=true;
     rowCount += 1;
     FirstPicFlag = true;
@@ -91,44 +101,53 @@ void draw() {
     if (rowCount >= table.getRowCount()-1) {
       exit();
     }
-  } else if (saveTime+fix1dur+cuedur+fix2dur+stimdur<frameCount) {
+  } else if (saveTime+fix1dur+cuedur+fix2dur+stimdur<millis()) {
     //println("2");
     showfix1=false; 
     showcue=false;
     showfix2=false;
     showstim=false;
     showITI = true;
-  } else if (saveTime+fix1dur+cuedur+fix2dur<frameCount) {
+  } else if (saveTime+fix1dur+cuedur+fix2dur<millis()) {
     //println("3");
     showfix1=false; 
     showcue=false;
     showfix2=false;
     showstim=true;
     showITI = false;
-  } else if (saveTime+fix1dur+cuedur<frameCount) {
+  } else if (saveTime+fix1dur+cuedur<millis()) {
     //println("4");
     showfix1=false; 
     showcue=false;
     showfix2=true;
     showstim=false;
     showITI = false;
-  } else if (saveTime+fix1dur<frameCount) {
+  } else if (saveTime+fix1dur<millis()) {
     //println("5");
     showfix1=false; 
     showcue=true;
     showfix2=false;
     showstim=false;
     showITI = false;
-  } else if (saveTime<frameCount) {
+  } else if (saveTime<millis()) {
     if (FirstPicFlag) {
       //println("6");
       row = table.getRow(rowCount);
       cue = (row.getString("cue")).charAt(0);
       stim = (row.getString("stim")).charAt(0);
       correctresp = (row.getString("correctresp")).charAt(0);
-      ITI = round(int(row.getInt("ITI"))*0.06);
+      ITI = round(int(row.getInt("ITI")));
       cuecolor = row.getInt("cuecolor");
       stimcolor = row.getInt("stimcolor");
+      ispractice = row.getInt("ispractice");
+      if ((ispractice == 0) && !expStarted) {
+        //println("xxxx");
+        rowCount -= 1;
+        expStarted = true;
+        noLoop();
+        init = true;
+        initscreen=4;
+      }
       //println(ITI);
       FirstPicFlag = false;
 
@@ -147,7 +166,7 @@ void draw() {
   } else if (showcue) {
     background(bgcolor);
     if (cuecolor == 1) {
-      fill(0, 0, 255);
+      fill(0, 0, 0);
     } else if (cuecolor == 2) {
       fill(0, 255, 0);
     } else if (cuecolor == 3) {
@@ -164,7 +183,7 @@ void draw() {
   } else if (showstim) {
     background(bgcolor);
     if (stimcolor == 1) {
-      fill(0, 0, 255);
+      fill(0, 0, 0);
     } else if (stimcolor == 2) {
       fill(0, 255, 0);
     } else if (stimcolor == 3) {
@@ -174,7 +193,6 @@ void draw() {
     fill(0, 0, 0);
     //text("4", width/2, height/2);
     if (showstimflag) {
-      stimframe = frameCount;
       stimTime = millis();
       showstimflag = false;
     }
@@ -184,17 +202,27 @@ void draw() {
   }
   if (init) {
     if (initscreen == 1) {
-      text(instructionText, width/2, height/2);
+      textSize(textsize/2);
+      text(firstinstructionText, width/16, height/4, width*7/8, height*3/4);
+      textSize(textsize);
       //println("-1");
-    } else {
-      if (playflag) {
-        background(bgcolor);
-        soundfile.play();
-        playflag = false;
-      }
-      if (!soundfile.isPlaying()) {
-        text("Press space bar to continue", width/2, height/2);
-      }
+    } else if (initscreen == 2) {
+      background(bgcolor);
+      textSize(textsize/2);
+      text(pracinstructionText, width/16, height/4, width*7/8, height*3/4);
+      textSize(textsize);
+    } else if (initscreen == 3) {
+      init = false;
+      showcue = true;
+      //println("2 ", initscreen);
+      background(bgcolor);
+      delay(500);
+      saveTime = millis(); //+saveTime+fix1dur+cuedur+fix2dur+stimdur+ITI;
+    } else if (initscreen == 4) {
+      background(bgcolor);
+      textSize(textsize/2);
+      text(expinstructionText, width/16, height/4, width*7/8, height*3/4);
+      textSize(textsize);
     }
   }
 }
@@ -204,15 +232,19 @@ void draw() {
 void keyPressed() {
 
   if (key == ' ') {
-    if (initscreen>1) {
+    if (initscreen>2) {
       init = false;
       showcue = true;
-      //println("0");
+      //println("0 ", initscreen);
+      if (!looping) {
+        loop();
+      }
       background(bgcolor);
       delay(500);
-      saveTime = frameCount; //+saveTime+fix1dur+cuedur+fix2dur+stimdur+ITI;
+      saveTime = millis(); //+saveTime+fix1dur+cuedur+fix2dur+stimdur+ITI;
     } else {
       initscreen += 1;
+      //println("1 ", initscreen);
     }
   }
   if (key == AXkey && noMore) {
@@ -239,9 +271,9 @@ void exit() {
   String dayS = String.valueOf(day());
   String hourS = String.valueOf(hour());
   String minuteS = String.valueOf(minute());
-  String myfilename = "AS3out"+"-"+dayS+"-"+hourS+"-"+minuteS+".csv";
+  String myfilename = "AXCPTout"+"-"+dayS+"-"+hourS+"-"+minuteS+".csv";
   saveTable(table, myfilename, "csv");
 
-  println("exiting");
+  //println("exiting");
   super.exit();
 }
