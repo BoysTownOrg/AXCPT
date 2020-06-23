@@ -33,7 +33,7 @@ int imagewidth, imageheight;
 void setup() {
   background(bgcolor);
   textAlign(CENTER);
-  frameRate(60);
+  //frameRate(60);
   fullScreen();
   textSize(textsize);
   fill(0);

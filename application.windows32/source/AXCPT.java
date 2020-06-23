@@ -51,7 +51,7 @@ int imagewidth, imageheight;
 public void setup() {
   background(bgcolor);
   textAlign(CENTER);
-  frameRate(60);
+  //frameRate(60);
   
   textSize(textsize);
   fill(0);
